@@ -7,14 +7,22 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject var session: UserSession
+
     var body: some View {
         VStack(spacing: 16) {
             Text("Settings")
                 .font(.largeTitle)
 
-            Text("App settings")
+            Button(
+                action: { session.deleteUser() }
+            ) {
+                Text("Delete User").frame(
+                    maxWidth: .infinity,
+                    alignment: .center
+                )
+            }
         }
         .padding()
     }
 }
-

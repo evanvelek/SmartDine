@@ -19,8 +19,13 @@ final class UserSession: ObservableObject {
     func saveUser(with quizDat: QuizResult) {
         let newId = UUID().uuidString
         UserDefaults.standard.set(newId, forKey: "userId")
+        userId = newId
         
         // TODO: Evan -- Call some sort of save API to backend with new user entry
+    }
+    
+    func deleteUser() {
+        userId = nil
     }
     
     func getUserPreferences() -> [String: Int]{

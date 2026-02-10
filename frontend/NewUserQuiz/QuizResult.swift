@@ -8,6 +8,7 @@
 import Foundation
 
 
-struct QuizResult: Codable {
-    let preferences: [String: Int]
+struct QuizResult {
+    let selectedAllergies: Set<Allergy>
+    let quizAnswers: [QuizOption]
 }

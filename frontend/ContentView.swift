@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var session: UserSession
     var body: some View {
         TabView {
             Tab(Constants.homeString, systemImage: Constants.homeIcon){
@@ -17,7 +18,7 @@ struct ContentView: View {
                 Text(Constants.upcomingString)
             }
             Tab(Constants.settingsString, systemImage:Constants.settingsIcon){
-                Text(Constants.settingsString)
+                SettingsView().environmentObject(session)
             }
         }
     }

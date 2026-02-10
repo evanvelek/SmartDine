@@ -30,7 +30,7 @@ struct QuizQuestion: Identifiable {
 }
 
 struct NewUserQuiz: View {
-    @EnvironmentObject var sesion: UserSession
+    @EnvironmentObject var session: UserSession
 
     @State private var selectedAllergies: Set<Allergy> = []
     @State private var hasSelectedAllergies: Bool = false
@@ -40,12 +40,21 @@ struct NewUserQuiz: View {
 
     let questions: [QuizQuestion] = [
         QuizQuestion(
-            prompt: "Pick your favorite",
+            prompt: "Pick your favorite of these cuisines",
             options: [
-                QuizOption(title: "Pizza", imageName: "pizza"),
-                QuizOption(title: "Burger", imageName: "burger"),
-                QuizOption(title: "Ramen", imageName: "ramen"),
-                QuizOption(title: "Tacos", imageName: "tacos"),
+                QuizOption(title: "Italian", imageName: "pizza"),
+                QuizOption(title: "American", imageName: "burger"),
+                QuizOption(title: "Japanese", imageName: "ramen"),
+                QuizOption(title: "Mexican", imageName: "tacos"),
+            ]
+        ),
+        QuizQuestion(
+            prompt: "What is your preferred price range?",
+            options: [
+                QuizOption(title: "Low", imageName: "low" ),
+                QuizOption(title: "Moderate", imageName: "dollar"),
+                QuizOption(title: "Pricy", imageName: "twodollar"),
+                QuizOption(title: "Expensive", imageName: "threedollar")
             ]
         )
         // TODO: Evan -- Add more quiz questions
@@ -61,6 +70,7 @@ struct NewUserQuiz: View {
         if currentIndex < questions.count - 1 {
             currentIndex += 1
         } else {
+            session.saveUser(with: QuizResult(selectedAllergies: selectedAllergies, quizAnswers: favoriteDishes))
             // TODO: Evan -- Implement quiz submission to backend
         }
     }
