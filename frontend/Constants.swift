@@ -17,5 +17,5 @@ struct Constants {
     static let favoriteIcon = "star"
     static let settingsIcon = "gear"
 
-    static let apiRoot = "http://10.0.0.179:8000"
+    static let apiRoot = "http://0.0.0.0:8000"
 }
