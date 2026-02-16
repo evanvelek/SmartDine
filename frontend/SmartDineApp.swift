@@ -9,9 +9,9 @@ import SwiftUI
 
 @main
 struct SmartDineApp: App {
-    
+
     @StateObject private var session = UserSession()
-    
+
     var body: some Scene {
         WindowGroup {
             if session.userId == nil {
@@ -22,5 +22,3 @@ struct SmartDineApp: App {
         }
     }
 }
-
-

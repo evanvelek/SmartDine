@@ -11,13 +11,14 @@ struct ContentView: View {
     @EnvironmentObject var session: UserSession
     var body: some View {
         TabView {
-            Tab(Constants.homeString, systemImage: Constants.homeIcon){
-                HomeView()
+            Tab(Constants.homeString, systemImage: Constants.homeIcon) {
+                HomeView().environmentObject(session)
             }
-            Tab(Constants.favoriteString, systemImage:Constants.favoriteIcon){
+            Tab(Constants.favoriteString, systemImage: Constants.favoriteIcon) {
                 Text(Constants.upcomingString)
+                // FavoritesView().environmentObject(session)
             }
-            Tab(Constants.settingsString, systemImage:Constants.settingsIcon){
+            Tab(Constants.settingsString, systemImage: Constants.settingsIcon) {
                 SettingsView().environmentObject(session)
             }
         }

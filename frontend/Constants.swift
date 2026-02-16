@@ -7,13 +7,15 @@
 
 import Foundation
 
-struct Constants{
-    static let homeString="Home"
-    static let upcomingString="Upcoming"
-    static let favoriteString="Favorite"
-    static let settingsString="Settings"
-    
+struct Constants {
+    static let homeString = "Home"
+    static let upcomingString = "Upcoming"
+    static let favoriteString = "Favorite"
+    static let settingsString = "Settings"
+
     static let homeIcon = "house"
     static let favoriteIcon = "star"
     static let settingsIcon = "gear"
+
+    static let apiRoot = "http://10.0.0.179:8000"
 }
