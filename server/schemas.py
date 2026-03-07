@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any
 
 class Context(BaseModel):
     lat: float
@@ -21,6 +22,13 @@ class UserProfile(BaseModel):
     budget_max_price_level: int = 2
     dining_style: str = ""
     max_distance_m: int = 2000
+
+class VisitRequest(BaseModel):
+    user_id: str
+    restaurant_id: str
+    timestamp: str
+    visit_rating: Optional[int] = None
+    context: Dict[str, Any]
 
 class Restaurant(BaseModel):
     id: str
