@@ -38,6 +38,10 @@ def init_db() -> None:
             context_json TEXT
         )
     """)
+    con.execute("""
+        CREATE INDEX IF NOT EXISTS idx_visit_history_user_id
+        ON visit_history (user_id)
+    """)
     con.commit()
     con.close()
 
