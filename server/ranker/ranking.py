@@ -117,11 +117,12 @@ from . import history
 
 BASE_WEIGHTS = {
     'distance': 0.25,
-    'price': 0.20,
+    'price': 0.15,
     'dietary_match': 0.15,
     'time_match': 0.15,
     'preference_score': 0.10,
-    'history_score': 0.15
+    'history_score': 0.15,
+    'rating': 0.05
 }
 
 #not sure if it should be more?
@@ -242,6 +243,12 @@ def preference_score(restaurant, user_preferences):
     
     return min(1.0, score)
 
+def rating_score(restaurant, min_rating=1.0, max_rating=5.0):
+    if restaurant.rating is None:
+        return 0.5 
+    rating = max(min_rating, min(max_rating, restaurant.rating))
+    return (rating - min_rating) / (max_rating - min_rating)
+
 
 def history_score(restaurant, user_history, restaurants_dict, context, current_time, decay_rate=30):
     if len(user_history) < MIN_VISITS_FOR_PATTERN:
@@ -320,6 +327,7 @@ def adjust_weights(base_weights, context, user, has_history):
         weights['dietary_match'] = 0.10
         weights['preference_score'] = 0.05
         weights['history_score'] = 0.05
+        weights['rating'] = 0.05
     
     #if no dietary restrictions, redistribute that weight
     elif not user.dietary_restrictions:
@@ -328,6 +336,7 @@ def adjust_weights(base_weights, context, user, has_history):
         weights['preference_score'] += extra_weight * 0.4
         weights['price'] += extra_weight * 0.3
         weights['history_score'] += extra_weight * 0.3
+        weights['rating'] += extra_weight * 0.1
     
     #if strong dietary restrictions, increase dietary match weight
     elif len(user.dietary_restrictions) >= 2:
@@ -344,6 +353,7 @@ def adjust_weights(base_weights, context, user, has_history):
         weights['preference_score'] += extra_weight * 0.4
         weights['distance'] += extra_weight * 0.3
         weights['price'] += extra_weight * 0.3
+        weights['rating'] += extra_weight * 0.3
 
     total = sum(weights.values())
     if total > 0:
@@ -368,6 +378,7 @@ def rank_restaurants(restaurants, user, context, user_history, restaurants_dict,
         pref_score = preference_score(restaurant, user)
         hist_score = history_score(restaurant, user_history, restaurants_dict, 
                                    context, current_time)
+        rat_score = rating_score(restaurant) 
         
         #scores for explanation
         score_breakdown = {
@@ -376,7 +387,8 @@ def rank_restaurants(restaurants, user, context, user_history, restaurants_dict,
             'dietary_match': diet_score,
             'time_match': time_score,
             'preference_score': pref_score,
-            'history_score': hist_score
+            'history_score': hist_score,
+            'rating': rat_score
         }
         
         #weighted overall score
@@ -386,7 +398,8 @@ def rank_restaurants(restaurants, user, context, user_history, restaurants_dict,
             weights['dietary_match'] * diet_score +
             weights['time_match'] * time_score +
             weights['preference_score'] * pref_score +
-            weights['history_score'] * hist_score
+            weights['history_score'] * hist_score +
+            weights['rating'] * rat_score
         )
         
         ranked.append((restaurant, overall_score, score_breakdown))
