@@ -204,7 +204,7 @@ def dietary_match_score(restaurant, dietary_restrictions):
 
 def time_match_score(restaurant, context):
     #check if open
-    if not restaurant.is_open_at(context.current_time):
+    if restaurant.hours and not restaurant.is_open_at(context.current_time):
         return 0.0
     
     base_score = 0.7

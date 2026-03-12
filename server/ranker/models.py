@@ -120,17 +120,14 @@ class Restaurant:
     def meets_filter_criteria(self, user, context):
         if not user.check_dietary_compatibility(self):
             return False
-
         if not user.check_price_fit(self):
             return False
-
         distance = self.distance_from(context.current_location)
         if distance > user.max_distance:
             return False
-
-        if not self.is_open_at(context.current_time):
+        # Only check hours if we actually have hour data
+        if self.hours and not self.is_open_at(context.current_time):
             return False
-        
         return True
 
 '''
