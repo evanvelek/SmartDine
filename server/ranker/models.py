@@ -45,6 +45,8 @@ class User:
         return True
     
     def check_price_fit(self, restaurant):
+        if restaurant.price_level is None:
+            return True
         #allow restaurants <= budget level
         return restaurant.price_level <= self.budget_level
 
