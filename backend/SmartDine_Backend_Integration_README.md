@@ -67,7 +67,7 @@ Example response:
 {
   "favorites": [
     {
-      "restaurant_id": "yelp:cqPZyKKl1iJB_NiKj5m43w",
+      "restaurant_id": "yelp:id string",
       "name": "Blue Bowl Superfoods",
       "rating": 4.6,
       "description": "acai bowls • healthy • rated 4.6"
