@@ -42,6 +42,33 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_visit_history_user_id
         ON visit_history (user_id)
     """)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS favorites (
+            user_id TEXT NOT NULL,
+            restaurant_id TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            name TEXT,
+            address TEXT,
+            rating REAL,
+            description TEXT,
+            PRIMARY KEY (user_id, restaurant_id)
+        )
+    """)
+    con.execute("""
+        CREATE INDEX IF NOT EXISTS idx_favorites_user_id
+        ON favorites (user_id)
+    """) 
+    # Lightweight migration for older favorites table
+    for stmt in [
+        "ALTER TABLE favorites ADD COLUMN name TEXT",
+        "ALTER TABLE favorites ADD COLUMN address TEXT",
+        "ALTER TABLE favorites ADD COLUMN rating REAL",
+        "ALTER TABLE favorites ADD COLUMN description TEXT",
+    ]:
+        try:
+            con.execute(stmt)
+        except sqlite3.OperationalError:
+            pass
     con.commit()
     con.close()
 

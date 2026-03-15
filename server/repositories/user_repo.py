@@ -1,8 +1,8 @@
 import json
+from datetime import datetime, timezone
 from typing import Optional
 from db import get_conn
 from schemas import UserProfile
-
 
 def get_user_profile(user_id: str) -> Optional[UserProfile]:
     with get_conn() as con:
@@ -93,3 +93,103 @@ def get_user_history(user_id: str):
         ).fetchall()
 
     return rows
+
+
+def delete_user_profile(user_id: str) -> bool:
+    with get_conn() as con:
+        cur = con.cursor()
+
+        cur.execute(
+            """
+            DELETE FROM favorites
+            WHERE user_id = ?
+            """,
+            (user_id,)
+        )
+
+        cur.execute(
+            """
+            DELETE FROM visit_history
+            WHERE user_id = ?
+            """,
+            (user_id,)
+        )
+
+        cur.execute(
+            """
+            DELETE FROM user_history
+            WHERE user_id = ?
+            """,
+            (user_id,)
+        )
+
+        cur.execute(
+            """
+            DELETE FROM user_profiles
+            WHERE user_id = ?
+            """,
+            (user_id,)
+        )
+
+        deleted_profile = cur.rowcount > 0
+        con.commit()
+        return deleted_profile
+
+
+def add_favorite(
+    user_id: str,
+    restaurant_id: str,
+    name: str,
+    address: str | None = None,
+    rating: float | None = None,
+    description: str | None = None,
+) -> None:
+    with get_conn() as con:
+        con.execute(
+            """
+            INSERT INTO favorites (
+                user_id, restaurant_id, created_at, name, address, rating, description
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, restaurant_id) DO UPDATE SET
+                created_at = excluded.created_at,
+                name = excluded.name,
+                address = excluded.address,
+                rating = excluded.rating,
+                description = excluded.description
+            """,
+            (
+                user_id,
+                restaurant_id,
+                datetime.now(timezone.utc).isoformat(),
+                name,
+                address,
+                rating,
+                description,
+            )
+        )
+        con.commit()
+
+
+def get_user_favorites(user_id: str):
+    with get_conn() as con:
+        rows = con.execute(
+            """
+            SELECT restaurant_id, name, address, rating, description
+            FROM favorites
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            """,
+            (user_id,)
+        ).fetchall()
+
+    return [
+        {
+            "id": row[0],
+            "name": row[1],
+            "address": row[2],
+            "rating": row[3],
+            "description": row[4],
+        }
+        for row in rows
+    ]

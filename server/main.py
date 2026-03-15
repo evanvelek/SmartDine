@@ -1,18 +1,22 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from schemas import RecommendRequest, RecommendResponse, UserProfile
-from services.recommend_service import recommend
-from db import init_db
-from repositories.user_repo import upsert_user_profile
+from schemas import RecommendRequest, RecommendResponse, UserProfile, VisitRequest, FavoriteRequest
 from services.recommend_service import recommend, debug_recommend
-from schemas import RecommendRequest, RecommendResponse, UserProfile, VisitRequest
-from repositories.user_repo import upsert_user_profile, log_visit
+from db import init_db
+from repositories.user_repo import (
+    upsert_user_profile,
+    log_visit,
+    get_user_profile,
+    delete_user_profile,
+    add_favorite,
+    get_user_favorites,
+)
 
 
-app = FastAPI(title="SmartDine Backend (Midterm Demo)")
+app = FastAPI(title="SmartDine Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,8 +43,38 @@ def upsert_profile(p: UserProfile):
     upsert_user_profile(p)
     return {"ok": True}
 
+@app.get("/profile/{user_id}", response_model=UserProfile)
+def get_profile_endpoint(user_id: str):
+    profile = get_user_profile(user_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
 @app.post("/visit")
 def visit_endpoint(v: VisitRequest):
     log_visit(v)
     return {"ok": True}
 
+@app.delete("/profile/{user_id}")
+def delete_profile(user_id: str):
+    deleted = delete_user_profile(user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return {"ok": True, "deleted_user_id": user_id}
+
+@app.post("/favorites")
+def add_favorite_endpoint(f: FavoriteRequest):
+    add_favorite(
+        user_id=f.user_id,
+        restaurant_id=f.restaurant_id,
+        name=f.name,
+        address=f.address,
+        rating=f.rating,
+        description=f.description,
+    )
+    return {"ok": True}
+
+@app.get("/favorites/{user_id}")
+def get_favorites_endpoint(user_id: str):
+    favorites = get_user_favorites(user_id)
+    return {"favorites": favorites}

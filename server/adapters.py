@@ -1,13 +1,21 @@
 # server/adapters.py
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from ranker.models import User, Restaurant, Context
 from ranker.ranking import rank_restaurants
 from ranker.models import VisitHistory
 from repositories.user_repo import get_user_history
 
+
 METER_TO_MILES = 1 / 1609.34
+
+
+def _to_utc_datetime(value: str) -> datetime:
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _split_csv(value):
@@ -37,7 +45,7 @@ def build_ranker_context(ctx):
         transport = "driving"
 
     return Context(
-        current_time=datetime.now(),
+        current_time=datetime.now(timezone.utc),
         current_location={
             "latitude": ctx.lat,
             "longitude": ctx.lng
@@ -65,7 +73,7 @@ def build_ranker_restaurants(restaurants):
             },
             hours={},
             rating=r.rating or 0.0,
-            dietary_options=[],
+            dietary_options=r.dietary_options or [],
             service_style="casual"
         )
 
@@ -77,10 +85,6 @@ def build_ranker_restaurants(restaurants):
 
 def build_restaurants_dict(restaurants):
     return {r.restaurant_id: r for r in restaurants}
-
-
-def build_user_history():
-    return []
 
 
 def call_ranker(restaurants, user, context, user_history):
@@ -101,13 +105,15 @@ def build_user_history(user_id: str):
     visits = []
 
     for row in rows:
+        timestamp_raw = row["timestamp"] if isinstance(row, dict) else row[3]
+
         visits.append(
             VisitHistory(
                 visit_id=row["visit_id"] if isinstance(row, dict) else row[0],
                 user_id=int(row["user_id"]) if isinstance(row, dict) and str(row["user_id"]).isdigit()
                        else abs(hash(row["user_id"] if isinstance(row, dict) else row[1])) % (10**8),
                 restaurant_id=abs(hash(row["restaurant_id"] if isinstance(row, dict) else row[2])) % (10**8),
-                timestamp=datetime.fromisoformat(row["timestamp"] if isinstance(row, dict) else row[3]),
+                timestamp=_to_utc_datetime(timestamp_raw),
                 visit_rating=row["visit_rating"] if isinstance(row, dict) else row[4],
                 context=json.loads(row["context_json"] if isinstance(row, dict) else row[5]) if (row["context_json"] if isinstance(row, dict) else row[5]) else {}
             )

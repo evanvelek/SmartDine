@@ -44,6 +44,8 @@ class Restaurant(BaseModel):
     address: Optional[str] = None
     distance_m: Optional[float] = None
     eta_min: Optional[int] = None
+    description: Optional[str] = None
+    dietary_options: List[str] = []
     raw: Optional[Dict[str, Any]] = None
 
 class Recommendation(Restaurant):
@@ -52,3 +54,11 @@ class Recommendation(Restaurant):
 class RecommendResponse(BaseModel):
     generated_at: str
     recommendations: List[Recommendation]
+
+class FavoriteRequest(BaseModel):
+    user_id: str
+    restaurant_id: str
+    name: str
+    address: Optional[str] = None
+    rating: Optional[float] = None
+    description: Optional[str] = None
