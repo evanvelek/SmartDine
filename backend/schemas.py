@@ -7,7 +7,7 @@ class Context(BaseModel):
     lat: float
     lng: float
     time_available_min: int = Field(ge=1, le=180)
-    max_distance_m: int = Field(default=2000, ge=100, le=20000)
+    max_distance_m: int = Field(default=2000, ge=100, le=100000)
     time_of_day: Optional[Literal["breakfast","lunch","dinner","snack"]] = None
     transport_mode: Optional[Literal["walk","drive"]] = "walk"
 
