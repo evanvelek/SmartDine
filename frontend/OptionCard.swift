@@ -16,10 +16,15 @@ struct OptionCard: View {
         Button(action: onSelect) {
             VStack(spacing: 8) {
                 if !option.imageName.isEmpty {
-                    Image(option.imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 80)
+                    if option.isEmoji {
+                        Text(option.imageName)
+                            .font(.system(size: 80))
+                    } else {
+                        Image(option.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 80)
+                    }
                 }
 
                 Text(option.title)

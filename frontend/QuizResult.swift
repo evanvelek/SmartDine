@@ -9,6 +9,9 @@ import Foundation
 
 
 struct QuizResult {
-    let selectedAllergies: Set<Allergy>
-    let quizAnswers: [QuizOption]
+    var dietRestrictions: String?
+    var preferedCuisines: String?
+    var budgetMaxPriceLevel: Int?
+    var diningStyle: String = "casual"
+    var maxDistanceM: Int?
 }

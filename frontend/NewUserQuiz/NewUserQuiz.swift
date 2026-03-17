@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 enum Allergy: String, CaseIterable, Identifiable {
-    case peanuts, dairy, shellfish, gluten, soy
+    case peanuts, dairy, shellfish, gluten, soy, vegetarian, vegan
 
     var id: String { rawValue }
     var label: String {
@@ -17,10 +17,40 @@ enum Allergy: String, CaseIterable, Identifiable {
     }
 }
 
+enum Cuisines: String, CaseIterable, Identifiable {
+    case american, indian, thai, italian, mexican, french, japanese, korean,
+        vietnamese, greek, spanish, mediterranean, chinese
+
+    var id: String { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .american: "🍔"
+        case .indian: "🍛"
+        case .thai: "🍜"
+        case .italian: "🍝"
+        case .mexican: "🌮"
+        case .french: "🥖"
+        case .japanese: "🍣"
+        case .korean: "🥢"
+        case .vietnamese: "🍲"
+        case .greek: "🥙"
+        case .spanish: "🥘"
+        case .mediterranean: "🫒"
+        case .chinese: "🥡"
+        }
+    }
+
+    var label: String {
+        "\(emoji) \(rawValue.capitalized)"
+    }
+}
+
 struct QuizOption: Identifiable {
     let id = UUID()
     let title: String
     let imageName: String
+    var isEmoji: Bool = true
 }
 
 struct QuizQuestion: Identifiable {
@@ -35,10 +65,14 @@ struct NewUserQuiz: View {
     @AppStorage("transport_mode") var transport_mode: String = "walk"
 
     @State private var selectedAllergies: Set<Allergy> = []
+    @State private var selectedCuisines: Set<Cuisines> = []
     @State private var hasSelectedAllergies: Bool = false
+    @State private var hasSelectedCuisines: Bool = false
 
     @State private var currentIndex = 0
     @State private var favoriteDishes: [QuizOption] = []
+
+    @State var QR: QuizResult = QuizResult()
 
     let questions: [QuizQuestion] = [
         QuizQuestion(
@@ -50,29 +84,15 @@ struct NewUserQuiz: View {
                 QuizOption(title: "100km", imageName: ""),
             ]
         ),
-        QuizQuestion(prompt: "Do you prefer walking or driving?", options: [
-            QuizOption(title: "Walking", imageName: ""),
-            QuizOption(title: "Driving", imageName: ""),
-        ]),
-        QuizQuestion(
-            prompt: "Pick your favorite of these cuisines",
-            options: [
-                QuizOption(title: "Italian", imageName: "pizza"),
-                QuizOption(title: "American", imageName: "burger"),
-                QuizOption(title: "Japanese", imageName: "ramen"),
-                QuizOption(title: "Mexican", imageName: "tacos"),
-            ]
-        ),
         QuizQuestion(
             prompt: "What is your preferred price range?",
             options: [
-                QuizOption(title: "Low", imageName: "low"),
-                QuizOption(title: "Moderate", imageName: "dollar"),
-                QuizOption(title: "Pricy", imageName: "twodollar"),
-                QuizOption(title: "Expensive", imageName: "threedollar"),
+                QuizOption(title: "$", imageName: ""),
+                QuizOption(title: "$$", imageName: ""),
+                QuizOption(title: "$$$", imageName: ""),
+                QuizOption(title: "$$$$", imageName: ""),
             ]
         ),
-        // TODO: Evan -- Add more quiz questions
     ]
 
     let columns = [
@@ -84,27 +104,30 @@ struct NewUserQuiz: View {
         favoriteDishes.append(option)
         if currentIndex == 0 {
             if option.title == "10km" {
+                QR.maxDistanceM = 10000
                 max_distance_m = 10000
             } else if option.title == "20km" {
+                QR.maxDistanceM = 20000
                 max_distance_m = 20000
             } else if option.title == "100km" {
+                QR.maxDistanceM = 100000
                 max_distance_m = 100000
             }
         } else if currentIndex == 1 {
-            if option.title == "Driving" {
-                transport_mode = "drive"
-            }
+            QR.budgetMaxPriceLevel = option.title.count
         }
         if currentIndex < questions.count - 1 {
             currentIndex += 1
         } else {
-            session.saveUser(
-                with: QuizResult(
-                    selectedAllergies: selectedAllergies,
-                    quizAnswers: favoriteDishes
-                )
+            QR.preferedCuisines = selectedCuisines.map { $0.rawValue }.joined(
+                separator: ","
             )
-            // TODO: Evan -- Implement quiz submission to backend
+            Task {
+                await session.saveUser(
+                    quizData: QR,
+                    selectedAllergies: selectedAllergies
+                )
+            }
         }
     }
 
@@ -112,9 +135,13 @@ struct NewUserQuiz: View {
         hasSelectedAllergies = true
     }
 
+    private func finishCuisineSelection() {
+        hasSelectedCuisines = true
+    }
+
     var body: some View {
         VStack {
-            Text("New User Preferences Quiz")
+            Text("User Preferences")
                 .font(.largeTitle)
                 .padding()
                 .multilineTextAlignment(.center)
@@ -128,7 +155,11 @@ struct NewUserQuiz: View {
             switch hasSelectedAllergies {
             case false:
                 Form {
-                    Section(header: Text("Allergies")) {
+                    Section(
+                        header: Text(
+                            "Which of these dietary restrictions apply to you?"
+                        )
+                    ) {
                         ForEach(Allergy.allCases) { allergy in
                             Toggle(
                                 allergy.label,
@@ -160,31 +191,68 @@ struct NewUserQuiz: View {
                     }
                 }
             case true:
-                Form {
-                    VStack(spacing: 24) {
-                        Text(
-                            "Question \(currentIndex + 1) of \(questions.count)"
-                        )
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                        Text(questions[currentIndex].prompt)
-                            .font(.title2)
-                            .multilineTextAlignment(.center)
-
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(questions[currentIndex].options) { option in
-                                OptionCard(option: option) {
-                                    select(option)
-                                }
+                switch hasSelectedCuisines {
+                case false:
+                    Form {
+                        Section(
+                            header: Text(
+                                "Please select any number of these cuisines you especially enjoy."
+                            )
+                        ) {
+                            ForEach(Cuisines.allCases) { cuisine in
+                                Toggle(
+                                    cuisine.label,
+                                    isOn: Binding(
+                                        get: {
+                                            selectedCuisines.contains(cuisine)
+                                        },
+                                        set: { isSelected in
+                                            if isSelected {
+                                                selectedCuisines.insert(cuisine)
+                                            } else {
+                                                selectedCuisines.remove(cuisine)
+                                            }
+                                        }
+                                    )
+                                )
                             }
                         }
-                        .padding(.top, 12)
 
-                        Spacer()
+                        Section {
+                            Button(action: finishCuisineSelection) {
+                                Text("Next")
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
                     }
-                    .padding()
-                    .animation(.easeInOut, value: currentIndex)
+                case true:
+                    Form {
+                        VStack(spacing: 24) {
+                            Text(
+                                "Question \(currentIndex + 1) of \(questions.count)"
+                            )
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                            Text(questions[currentIndex].prompt)
+                                .font(.title2)
+                                .multilineTextAlignment(.center)
+
+                            LazyVGrid(columns: columns, spacing: 16) {
+                                ForEach(questions[currentIndex].options) {
+                                    option in
+                                    OptionCard(option: option) {
+                                        select(option)
+                                    }
+                                }
+                            }
+                            .padding(.top, 12)
+
+                            Spacer()
+                        }
+                        .padding()
+                        .animation(.easeInOut, value: currentIndex)
+                    }
                 }
             }
         }

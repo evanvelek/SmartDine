@@ -11,17 +11,23 @@ import Combine
 
 final class UserSession: ObservableObject {
     @Published var userId: String?
+    @Published var showUserQuiz: Bool = true
     
     init() {
         userId = UserDefaults.standard.string(forKey: "userId")
+        if userId != nil {
+            showUserQuiz = false
+        }
     }
     
-    func saveUser(with quizDat: QuizResult) {
+    func saveUser(quizData: QuizResult, selectedAllergies: Set<Allergy>) async {
         let newId = UUID().uuidString
         UserDefaults.standard.set(newId, forKey: "userId")
         userId = newId
         
-        // TODO: Evan -- Call some sort of save API to backend with new user entry
+        let allergyString = selectedAllergies.map { $0.rawValue }.joined(separator: ",")
+        await saveUserApi(qr: quizData, userId: newId, allergyString: allergyString)
+        showUserQuiz = false
     }
     
     func deleteUser() {
@@ -57,6 +63,10 @@ final class UserSession: ObservableObject {
         return [
             
         ]
+    }
+    
+    func setShowUserQuiz() {
+        showUserQuiz = true
     }
     
 }

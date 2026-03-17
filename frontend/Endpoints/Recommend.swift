@@ -24,15 +24,16 @@ struct ApiRecommendation: Codable {
     let explanation: String?
 }
 
-func recommend(lat: Double, lng: Double, with session: UserSession) async -> ApiResponse {
-    
+func recommend(lat: Double, lng: Double, with session: UserSession) async
+    -> ApiResponse
+{
+
     @AppStorage("max_distance_m") var max_distance_m: Int = 2000
     @AppStorage("transport_mode") var transport_mode: String = "walk"
 
     guard let url = URL(string: "\(Constants.apiRoot)/recommend") else {
         return ApiResponse(recommendations: [])
     }
-    
 
     let body: [String: Any] = [
         "user_id": session.userId ?? "0",
@@ -45,7 +46,6 @@ func recommend(lat: Double, lng: Double, with session: UserSession) async -> Api
             "transport_mode": transport_mode,
         ],
     ]
-    print(body)
 
     do {
         var request = URLRequest(url: url)
@@ -55,7 +55,7 @@ func recommend(lat: Double, lng: Double, with session: UserSession) async -> Api
 
         let (data, _) = try await URLSession.shared.data(for: request)
         let decoder = JSONDecoder()
-        
+
         decoder.keyDecodingStrategy = .convertFromSnakeCase
 
         return try decoder.decode(ApiResponse.self, from: data)
@@ -63,6 +63,6 @@ func recommend(lat: Double, lng: Double, with session: UserSession) async -> Api
     } catch {
         print(error)
     }
-    
+
     return ApiResponse(recommendations: [])
 }

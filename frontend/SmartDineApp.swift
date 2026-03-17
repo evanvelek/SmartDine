@@ -14,7 +14,7 @@ struct SmartDineApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if session.userId == nil {
+            if session.showUserQuiz {
                 NewUserQuiz().environmentObject(session)
             } else {
                 ContentView().environmentObject(session)
