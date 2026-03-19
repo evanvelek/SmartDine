@@ -15,8 +15,13 @@ struct ContentView: View {
                 HomeView().environmentObject(session)
             }
             Tab(Constants.favoriteString, systemImage: Constants.favoriteIcon) {
-                Text(Constants.upcomingString)
-                // FavoritesView().environmentObject(session)
+                NavigationStack {
+                    FavoritesView()
+                        .navigationDestination(for: ApiFavorite.self) { favorite in
+                            FavoriteDetailView(favorite: favorite)
+                        }
+                }
+                .environmentObject(session)
             }
             Tab(Constants.settingsString, systemImage: Constants.settingsIcon) {
                 SettingsView().environmentObject(session)

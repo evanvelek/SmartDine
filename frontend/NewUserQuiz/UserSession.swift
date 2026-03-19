@@ -21,17 +21,20 @@ final class UserSession: ObservableObject {
     }
     
     func saveUser(quizData: QuizResult, selectedAllergies: Set<Allergy>) async {
-        let newId = UUID().uuidString
-        UserDefaults.standard.set(newId, forKey: "userId")
-        userId = newId
+        if userId == nil{
+            let newId = UUID().uuidString
+            UserDefaults.standard.set(newId, forKey: "userId")
+            userId = newId
+        }
         
         let allergyString = selectedAllergies.map { $0.rawValue }.joined(separator: ",")
-        await saveUserApi(qr: quizData, userId: newId, allergyString: allergyString)
+        await saveUserApi(qr: quizData, userId: userId!, allergyString: allergyString)
         showUserQuiz = false
     }
     
     func deleteUser() {
         userId = nil
+        showUserQuiz = true
     }
     
     func getUserPreferences() -> [String: Int]{
@@ -51,7 +54,8 @@ final class UserSession: ObservableObject {
                 isOpenNow: item.isOpenNow ?? false,
                 distanceM: Int(item.distanceM ?? 0),
                 etaMin: Int(item.etaMin ?? 0),
-                explanation: item.explanation ?? ""
+                explanation: item.explanation ?? "",
+                description: item.description ?? "",
             )
         }
         

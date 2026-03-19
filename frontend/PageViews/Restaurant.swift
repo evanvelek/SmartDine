@@ -32,4 +32,5 @@ struct Restaurant: Identifiable, Hashable {
     let distanceM: Int
     let etaMin: Int
     let explanation: String
+    let description: String
 }

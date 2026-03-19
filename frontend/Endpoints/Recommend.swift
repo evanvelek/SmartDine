@@ -22,6 +22,7 @@ struct ApiRecommendation: Codable {
     let distanceM: Double?
     let etaMin: Int?
     let explanation: String?
+    let description: String?
 }
 
 func recommend(lat: Double, lng: Double, with session: UserSession) async

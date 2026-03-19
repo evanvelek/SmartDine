@@ -8,6 +8,67 @@
 import Foundation
 import SwiftUI
 
+struct FavoriteButton: View {
+    let restaurant: Restaurant
+    @EnvironmentObject var session: UserSession
+
+    @State private var isFavorited: Bool = false
+    @State private var isLoading: Bool = true
+
+    var body: some View {
+        Button(action: toggleFavorite) {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: isFavorited ? "heart.fill" : "heart")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(
+                            isFavorited ? .red : Color(.secondaryLabel)
+                        )
+                        .symbolEffect(.bounce, value: isFavorited)
+                }
+            }
+            .frame(width: 28, height: 28)
+        }
+        .disabled(isLoading)
+        .task {
+            await loadFavoriteState()
+        }
+    }
+
+    private func loadFavoriteState() async {
+        guard let userId = session.userId else {
+            isLoading = false
+            return
+        }
+        let result = await getFavoritesApi(userId: userId)
+        isFavorited = result.favorites.contains {
+            $0.id == restaurant.id.uuidString
+        }
+        isLoading = false
+    }
+
+    private func toggleFavorite() {
+        guard let userId = session.userId else { return }
+        let newState = true
+        withAnimation(.spring(response: 0.3)) {
+            isFavorited = newState
+        }
+        Task {
+            await addFavoriteApi(
+                userId: userId,
+                restaurantId: restaurant.id.uuidString,
+                restaurantName: restaurant.name,
+                restaurantAddress: "",
+                rating: restaurant.rating,
+                description: restaurant.description
+            )
+        }
+    }
+}
+
 struct RestaurantDetailView: View {
     let restaurant: Restaurant
     @EnvironmentObject var session: UserSession
@@ -43,34 +104,36 @@ struct RestaurantDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
 
-                VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 12) {
                     Text(restaurant.name)
                         .font(.system(size: 24, weight: .bold))
+                    
+                    FavoriteButton(restaurant: restaurant)
 
-//                    HStack(spacing: 12) {
-//                        StarRatingView(rating: restaurant.rating)
-//                        Divider().frame(height: 14)
-//                        PriceLevelView(priceLevel: restaurant.priceLevel)
-//                    }
+                    //                    HStack(spacing: 12) {
+                    //                        StarRatingView(rating: restaurant.rating)
+                    //                        Divider().frame(height: 14)
+                    //                        PriceLevelView(priceLevel: restaurant.priceLevel)
+                    //                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
 
                 HStack(spacing: 0) {
-//                    StatTile(
-//                        icon: "location.fill",
-//                        value: formattedDistance,
-//                        label: "Away",
-//                        color: .blue
-//                    )
-//                    Divider().frame(height: 40)
-//                    StatTile(
-//                        icon: "clock.fill",
-//                        value: "\(restaurant.etaMin) min",
-//                        label: "ETA",
-//                        color: .orange
-//                    )
-//                    Divider().frame(height: 40)
+                    //                    StatTile(
+                    //                        icon: "location.fill",
+                    //                        value: formattedDistance,
+                    //                        label: "Away",
+                    //                        color: .blue
+                    //                    )
+                    //                    Divider().frame(height: 40)
+                    //                    StatTile(
+                    //                        icon: "clock.fill",
+                    //                        value: "\(restaurant.etaMin) min",
+                    //                        label: "ETA",
+                    //                        color: .orange
+                    //                    )
+                    //                    Divider().frame(height: 40)
                     StatTile(
                         icon: "star.fill",
                         value: String(format: "%.1f", restaurant.rating),
@@ -92,11 +155,11 @@ struct RestaurantDetailView: View {
                 .padding(.top, 16)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Why we picked this", systemImage: "sparkles")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.secondary)
+                    //                    Label("Why we picked this", systemImage: "sparkles")
+                    //                        .font(.system(size: 13, weight: .semibold))
+                    //                        .foregroundColor(.secondary)
 
-                    Text(restaurant.explanation)
+                    Text(restaurant.description)
                         .font(.system(size: 15))
                         .foregroundColor(.primary)
                         .fixedSize(horizontal: false, vertical: true)
